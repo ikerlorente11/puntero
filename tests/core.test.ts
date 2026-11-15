@@ -4,7 +4,7 @@ import { parsePairLink } from '../src/core/link'
 import { DEFAULT_PAD, Output, Touchpad, Wheel } from '../src/core/touchpad'
 import { diffText, typingCommands } from '../src/core/typing'
 import { AirMouse, DEFAULT_AIR } from '../src/core/air'
-import { probe, subnetHosts } from '../src/core/scan'
+import { findPc, probe, subnetHosts } from '../src/core/scan'
 
 const hex = (b: Uint8Array) => Buffer.from(b).toString('hex')
 
@@ -263,5 +263,16 @@ describe('scan', () => {
     expect(await probe(ok, '1.2.3.4', 47810)).toMatchObject({ id: 'x', host: '1.2.3.4', pairing: true })
     expect(await probe(other, '1.2.3.4', 47810)).toBeNull()
     expect(await probe(async () => { throw new Error('x') }, '1.2.3.4', 47810)).toBeNull()
+  })
+  it('finds a paired PC at any of its addresses', async () => {
+    const at = (host: string, id: string) => async (url: string) => {
+      if (!url.includes(`//${host}:`)) throw new Error('nadie')
+      return { ok: true, json: async () => ({ app: 'puntero', id, name: 'PC' }) }
+    }
+    const pc = { id: 'x', hosts: ['10.0.0.2', '10.0.0.3'], port: 47810, lastHost: '10.0.0.2' }
+    expect(await findPc(at('10.0.0.3', 'x'), pc)).toBe('10.0.0.3')
+    expect(await findPc(at('10.0.0.3', 'otro'), pc)).toBeNull()
+    expect(await findPc(at('10.0.0.9', 'x'), pc)).toBeNull()
+    expect(await findPc(at('10.0.0.2', 'x'), { ...pc, hosts: [] })).toBe('10.0.0.2')
   })
 })

@@ -17,6 +17,8 @@ export interface Settings {
   airHold: boolean
   haptics: boolean
   keepAwake: boolean
+  /** on opening the app, go straight to the last PC used if it is on the network */
+  autoConnect: boolean
   showButtons: boolean
   favorites: Favorite[]
   recentUrls: string[]
@@ -27,6 +29,7 @@ export interface Settings {
 export interface Data {
   identity: Identity
   pcs: Pc[]
+  /** the last PC controlled (kept after disconnecting: it is the one the app reconnects to on opening) */
   lastPc: string | null
   settings: Settings
 }
@@ -46,6 +49,7 @@ const DEFAULT_SETTINGS: Settings = {
   airHold: true,
   haptics: true,
   keepAwake: true,
+  autoConnect: true,
   showButtons: true,
   favorites: DEFAULT_FAVORITES,
   recentUrls: [],

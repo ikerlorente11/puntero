@@ -41,3 +41,21 @@ export async function scan(fetchFn: Fetch, ip: string, port: number, onFound: (p
   }
   return found
 }
+
+/**
+ * Is this paired PC on the network right now? Asks /info on all its known addresses at once (the last
+ * one that worked first) and answers with the first address where that same PC replies.
+ */
+export function findPc(fetchFn: Fetch, pc: { id: string; hosts: string[]; port: number; lastHost?: string }, timeoutMs = 1500): Promise<string | null> {
+  const hosts = [...new Set(pc.lastHost ? [pc.lastHost, ...pc.hosts] : pc.hosts)]
+  if (!hosts.length) return Promise.resolve(null)
+  return new Promise(resolve => {
+    let pending = hosts.length
+    for (const host of hosts) {
+      probe(fetchFn, host, pc.port, timeoutMs).then(found => {
+        if (found?.id === pc.id) resolve(host)
+        else if (--pending === 0) resolve(null)
+      })
+    }
+  })
+}

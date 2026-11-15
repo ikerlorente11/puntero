@@ -116,6 +116,7 @@ export function MoreTab({ onLeave }: { onLeave: () => void }) {
       <Card title="General">
         <SwitchRow label="Vibrar al tocar" value={settings.haptics} onChange={v => updateSettings({ haptics: v })} />
         <SwitchRow label="Mantener la pantalla encendida" hint="Mientras controlas el PC" value={settings.keepAwake} onChange={v => updateSettings({ keepAwake: v })} />
+        <SwitchRow label="Conectar al último PC al abrir" hint="Si está encendido y en la misma wifi, la app va directa a él" value={settings.autoConnect} onChange={v => updateSettings({ autoConnect: v })} />
       </Card>
 
       {pc && (
