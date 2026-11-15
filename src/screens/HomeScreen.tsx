@@ -4,7 +4,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera'
 import * as Linking from 'expo-linking'
 import * as Network from 'expo-network'
 import { useEffect, useRef, useState } from 'react'
-import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
+import { ActivityIndicator, Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { pair, Pc } from '../core/client'
 import { DEFAULT_PORT, parsePairLink, PairLink } from '../core/link'
@@ -80,7 +80,7 @@ export function HomeScreen({ onOpen, incomingLink, clearIncoming }: { onOpen: (p
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <ScrollView contentContainerStyle={{ padding: 16, paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24, gap: 14 }}>
         <View style={styles.header}>
-          <Icon name="cursor-default-click" size={30} color={t.amber} />
+          <Image source={require("../../assets/icon.png")} style={{ width: 34, height: 34, borderRadius: 9 }} />
           <Text style={[styles.title, { color: t.text }]}>El Puntero</Text>
         </View>
 
