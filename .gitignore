@@ -45,3 +45,4 @@ yarn-error.*
 
 # Play service account
 credentials/
+credentials.json
