@@ -76,6 +76,14 @@
     "owner": "ikerlorente11",
     "runtimeVersion": {
       "policy": "appVersion"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "c03e735c-b6e1-432b-9c8a-2f9fb905e78a"
+      }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/c03e735c-b6e1-432b-9c8a-2f9fb905e78a"
     }
   }
 }

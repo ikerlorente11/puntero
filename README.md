@@ -6,6 +6,17 @@ Usa el móvil como ratón y teclado del PC, por la wifi. Esta es la app de **And
 herramienta **El Puntero** de [PC Toolkit](https://github.com/ikerlorente11/pc-toolkit), que también tiene su
 instalador propio en las releases de ese repo.
 
+## El PC
+
+En el PC (Windows 10 u 11) hace falta el programa **El Puntero**, gratis y sin permisos de administrador:
+
+- **[⬇ Descargar el instalador](https://github.com/ikerlorente11/pc-toolkit/releases?q=puntero-v&expanded=true)**
+  (el `El Puntero_x.y.z_x64-setup.exe` de la release más reciente), o
+- con [PC Toolkit](https://github.com/ikerlorente11/pc-toolkit), herramienta **El Puntero** (se instala y se actualiza sola).
+
+Ábrelo (se queda en la bandeja), y en el móvil pulsa **Escanear el QR del PC**. La primera vez Windows pregunta si
+puede usar la red: permítelo en redes privadas.
+
 ## Qué hace
 
 - **Ratón**: touchpad que ocupa la pantalla, con aceleración (lento es preciso, rápido cruza la pantalla).

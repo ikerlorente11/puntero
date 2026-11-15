@@ -1,0 +1,65 @@
+FICHA DE GOOGLE PLAY · El Puntero (com.ikerlorente11.puntero)
+Idioma: español (es-ES). Los números entre paréntesis son caracteres usados / límite de Play.
+
+========================================================================
+DESCRIPCIÓN BREVE (75/80)
+========================================================================
+Usa el móvil como ratón y teclado del PC: touchpad, modo aire y multimedia.
+
+========================================================================
+DESCRIPCIÓN COMPLETA (2871/4000)
+========================================================================
+El Puntero convierte tu móvil en el ratón y el teclado de tu PC con Windows. Desde el sofá, en la cama o dando una presentación: mueve el puntero, haz clic, escribe, controla la música y abre lo que quieras, por la wifi de casa y sin cables.
+
+UN TOUCHPAD DE VERDAD
+• Toda la pantalla es un touchpad con aceleración: lento es preciso y rápido cruza la pantalla.
+• Toca para hacer clic, toca dos veces para doble clic y mantén pulsado para arrastrar.
+• Dos dedos para desplazar (sigue un poco al soltar, como en un portátil), pellizca para hacer zoom y toca con dos dedos para el clic derecho.
+• Tres dedos para cambiar de app, ver todas las ventanas o ir al escritorio; cuatro para cambiar de escritorio.
+• Botones izquierdo, rueda y derecho que puedes mantener con un dedo mientras mueves con otro, y una tira a un lado para desplazar.
+• Un touchpad más pequeño te acompaña en todas las pestañas: escribe y mueve el puntero sin cambiar de pantalla.
+
+MODO AIRE
+• Mueve el puntero girando el móvil, como un puntero láser: apoya el pulgar, apunta y suelta.
+• Funciona sujetes el móvil como lo sujetes, y al volver al centro el puntero vuelve a donde empezó.
+
+TECLADO
+• Lo que escribes aparece en el PC al momento, con el autocorrector, la escritura deslizando, el dictado por voz y los emojis de tu teclado.
+• Ctrl, Alt, Mayúsculas y Windows para los atajos, flechas, Esc, Tab, Supr, Inicio, Fin y F1 a F12.
+• Redacta un texto largo y envíalo de una vez, o pega en el PC lo que copiaste en el móvil.
+
+MULTIMEDIA Y PRESENTACIONES
+• Reproducir, pausar y cambiar de canción en Spotify, YouTube, VLC o cualquier reproductor.
+• El volumen del PC, siempre al día, con silencio en un toque.
+• Botones para vídeos (adelantar, pantalla completa, subtítulos) y para presentaciones de PowerPoint o PDF.
+
+VENTANAS, APPS Y WEBS
+• Mira las ventanas abiertas del PC y tráelas al frente, minimízalas o ciérralas.
+• Abre cualquier app instalada, con buscador, y fija tus favoritas arriba.
+• Abre webs en el navegador del PC: escribe una dirección o una búsqueda, o elige tus favoritas.
+
+Y ADEMÁS
+• Bloquea, apaga la pantalla, suspende, reinicia o apaga el PC.
+• Atajos de Windows y del navegador a un toque.
+• El portapapeles en los dos sentidos, entre el móvil y el PC.
+• Ajusta la velocidad, la aceleración, el desplazamiento natural y cada gesto a tu gusto.
+
+FÁCIL Y SEGURO
+• Instala El Puntero en el PC (gratis, sin permisos de administrador), escanea el QR de su ventana y listo. También encuentra el PC solo en tu red y se empareja con un código.
+• Todo va cifrado entre el móvil y el PC, también lo que escribes: nadie más en tu red puede verlo ni controlar tu PC.
+• Sin cuentas, sin anuncios y sin analíticas. Nada pasa por Internet.
+
+Necesita un PC con Windows 10 u 11 en la misma red con el programa El Puntero, que se descarga gratis desde la página del proyecto o con PC Toolkit.
+
+========================================================================
+NOTAS DE LA VERSIÓN (máx. 500 cada una; de la más nueva a la más antigua)
+========================================================================
+
+--- 0.1.0 (Google Play, primera versión) · 348/500 ---
+Primera versión:
+• Touchpad con gestos de uno a cuatro dedos, botones de ratón y tira de desplazamiento.
+• Modo aire: mueve el puntero girando el móvil.
+• Teclado en directo con dictado y atajos.
+• Multimedia, volumen del PC, vídeos y presentaciones.
+• Ventanas, apps y webs del PC; bloquear, suspender y apagar.
+• Emparejado con QR y todo cifrado.

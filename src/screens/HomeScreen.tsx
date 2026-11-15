@@ -1,6 +1,7 @@
 // The PCs: the paired ones (tap to control), the ones found on the network (tap to pair with the
 // code) and "Escanear QR" to pair with the QR the PC shows.
 import { CameraView, useCameraPermissions } from 'expo-camera'
+import * as Linking from 'expo-linking'
 import * as Network from 'expo-network'
 import { useEffect, useRef, useState } from 'react'
 import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
@@ -11,6 +12,9 @@ import { FoundPc, scan } from '../core/scan'
 import { forgetPc, getData, savePc, useData } from '../store'
 import { useTheme } from '../theme'
 import { Btn, Card, haptic, Icon } from '../ui'
+
+/** the Windows half: the README of the repo has the download and the instructions */
+const PC_DOWNLOAD = 'https://github.com/ikerlorente11/puntero#el-pc'
 
 export function HomeScreen({ onOpen, incomingLink, clearIncoming }: { onOpen: (pc: Pc) => void; incomingLink: string | null; clearIncoming: () => void }) {
   const t = useTheme()
@@ -110,6 +114,10 @@ export function HomeScreen({ onOpen, incomingLink, clearIncoming }: { onOpen: (p
             Instala El Puntero en el PC (con PC Toolkit o su instalador), ábrelo y escanea el QR de su ventana.
           </Text>
           <Btn icon="qrcode-scan" label="Escanear el QR del PC" primary onPress={() => setCamera(true)} />
+          <Pressable onPress={() => Linking.openURL(PC_DOWNLOAD)} hitSlop={8} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Icon name="microsoft-windows" size={18} color={t.accent} />
+            <Text style={{ color: t.accent, fontWeight: '600' }}>Descargar El Puntero para el PC</Text>
+          </Pressable>
           <View style={styles.foundHead}>
             <Text style={{ color: t.muted, fontWeight: '600' }}>PCs en esta red</Text>
             {scanning ? <ActivityIndicator color={t.accent} /> : (

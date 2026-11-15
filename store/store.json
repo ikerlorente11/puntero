@@ -1,0 +1,54 @@
+{
+  "name": "El Puntero",
+  "bg_top": "#221f3d",
+  "bg_bottom": "#0d0e12",
+  "accent": "#a395ff",
+  "text": "#f3f1ff",
+  "subtext": "#cbc6ea",
+  "icon": {
+    "src": "icono-fuente.png",
+    "bg": "#14163a"
+  },
+  "feature": {
+    "shot": "01-touchpad.png",
+    "name_size": 72,
+    "tagline": [
+      "El ratón y el teclado de tu PC,",
+      "en el móvil"
+    ]
+  },
+  "shots": [
+    {
+      "file": "01-touchpad.png",
+      "caption": "Tu móvil, el touchpad de tu PC"
+    },
+    {
+      "file": "02-teclado.png",
+      "caption": "Escribe en el PC con el teclado del móvil"
+    },
+    {
+      "file": "03-multimedia.png",
+      "caption": "Música, vídeo y volumen desde el sofá"
+    },
+    {
+      "file": "04-ventanas.png",
+      "caption": "Cambia de ventana o ciérrala"
+    },
+    {
+      "file": "05-apps.png",
+      "caption": "Abre cualquier app del PC"
+    },
+    {
+      "file": "06-aire.png",
+      "caption": "Modo aire: apunta girando el móvil"
+    },
+    {
+      "file": "07-mas.png",
+      "caption": "Bloquea, suspende o apaga el PC"
+    },
+    {
+      "file": "08-emparejar.png",
+      "caption": "Se empareja con un QR. Sin cuentas"
+    }
+  ]
+}
