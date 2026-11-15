@@ -1,25 +1,81 @@
 {
   "expo": {
-    "name": "puntero",
+    "name": "El Puntero",
     "slug": "puntero",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "orientation": "portrait",
+    "scheme": "puntero",
+    "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "ios": {
-      "supportsTablet": true
-    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "android": {
+      "package": "com.ikerlorente11.puntero",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#1d1f52",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.CAMERA",
+        "android.permission.VIBRATE",
+        "android.permission.WAKE_LOCK",
+        "android.permission.HIGH_SAMPLING_RATE_SENSORS"
+      ],
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO"
+      ],
+      "predictiveBackGestureEnabled": false,
+      "softwareKeyboardLayoutMode": "resize"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ikerlorente11.puntero"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160,
+          "backgroundColor": "#14163a"
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "El Puntero usa la cámara para leer el QR de emparejado que muestra el PC.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": true
+        }
+      ],
+      [
+        "expo-sensors",
+        {
+          "motionPermission": "El Puntero usa el giroscopio para mover el puntero girando el móvil (modo aire)."
+        }
+      ],
+      "expo-font"
+    ],
+    "owner": "ikerlorente11",
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }

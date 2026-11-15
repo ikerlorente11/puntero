@@ -23,11 +23,10 @@ npx expo install --fix      # fix incompatible package versions
 
 Run lint and typecheck before declaring any task done.
 
-## Navigation & Routing
+## Navigation
 
-- Use **Expo Router** for all navigation. Routes live in `src/app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) outside `src/app/`.
-- Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
-- Docs: https://docs.expo.dev/router/introduction.md
+- Two screens switched by state in `App.tsx` (PCs / control of one PC) and tabs inside the control screen: no Expo Router on purpose (it is a remote control, not a site).
+- Pure logic lives in `src/core/` (protocol, crypto, touchpad gestures, air mouse, typing diff, network scan) and is tested with vitest in `tests/`; `tests/server.test.ts` runs against the real PC app (see PROTOCOL.md).
 
 ## Building with EAS
 

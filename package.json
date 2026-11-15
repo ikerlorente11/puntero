@@ -1,22 +1,48 @@
 {
-  "name": "puntero",
-  "version": "1.0.0",
+  "name": "puntero-android",
+  "version": "0.1.0",
   "main": "index.ts",
   "dependencies": {
+    "@expo/vector-icons": "^15.0.2",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-community/slider": "5.2.1",
     "expo": "~58.0.25",
+    "expo-build-properties": "~58.0.12",
+    "expo-camera": "~58.0.14",
+    "expo-clipboard": "~58.0.4",
+    "expo-crypto": "~58.0.8",
+    "expo-dev-client": "~58.0.20",
+    "expo-font": "~58.0.12",
+    "expo-haptics": "~58.0.8",
+    "expo-keep-awake": "~58.0.4",
+    "expo-linking": "~58.0.17",
+    "expo-navigation-bar": "~58.0.4",
+    "expo-network": "~58.0.5",
+    "expo-sensors": "~58.0.5",
+    "expo-splash-screen": "~58.0.14",
     "expo-status-bar": "~58.0.5",
+    "expo-system-ui": "~58.0.7",
+    "expo-updates": "~58.0.22",
     "react": "19.3.0",
-    "react-native": "0.88.1"
+    "react-native": "0.88.1",
+    "react-native-safe-area-context": "~5.11.1",
+    "tweetnacl": "^1.0.3"
   },
   "devDependencies": {
     "@types/react": "~19.3.0",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "vitest": "^5.1.0"
   },
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web"
+    "android": "expo run:android",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "update": "eas update --branch production --environment production --platform android",
+    "release": "eas build --platform android --profile production --auto-submit --non-interactive",
+    "build:apk": "eas build --platform android --profile preview"
   },
-  "private": true
+  "private": true,
+  "description": "El Puntero para Android: controla el ratón y el teclado del PC desde el móvil (Expo)",
+  "license": "PolyForm-Noncommercial-1.0.0"
 }
