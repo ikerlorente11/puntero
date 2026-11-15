@@ -78,7 +78,7 @@ export function HomeScreen({ onOpen, incomingLink, clearIncoming }: { onOpen: (p
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <ScrollView contentContainerStyle={{ padding: 16, paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24, gap: 14 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24, gap: 14, width: '100%', maxWidth: 640, alignSelf: 'center' }}>
         <View style={styles.header}>
           <Image source={require("../../assets/icon.png")} style={{ width: 34, height: 34, borderRadius: 9 }} />
           <Text style={[styles.title, { color: t.text }]}>El Puntero</Text>
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
   qrFrame: { width: 250, height: 250, borderWidth: 3, borderRadius: 24 },
   qrText: { color: '#fff', marginTop: 20, textAlign: 'center', paddingHorizontal: 30, fontSize: 15, textShadowColor: '#000', textShadowRadius: 4 },
   sheetBack: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', padding: 20 },
-  sheet: { borderRadius: 20, padding: 18, gap: 12 },
+  sheet: { borderRadius: 20, padding: 18, gap: 12, width: '100%', maxWidth: 520, alignSelf: 'center' },
   input: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 16 },
   codeInput: { fontSize: 28, letterSpacing: 8, textAlign: 'center', fontWeight: '700' },
 })

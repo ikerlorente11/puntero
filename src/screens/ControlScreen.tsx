@@ -1,7 +1,7 @@
 // Controlling one PC: a header with its name and the connection, the five tabs and the tab bar.
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake'
-import { useEffect, useState } from 'react'
-import { BackHandler, Keyboard, Pressable, StyleSheet, Text, View } from 'react-native'
+import { useEffect, useRef, useState } from 'react'
+import { BackHandler, Dimensions, Keyboard, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { AppsTab } from '../control/AppsTab'
 import { KeyboardTab } from '../control/KeyboardTab'
@@ -29,14 +29,36 @@ export function ControlScreen({ onBack }: { onBack: () => void }) {
   const { pc, status, error, notice } = useLive()
   const { settings } = useData()
   const [tab, setTab] = useState<Tab>('mouse')
+  const window = useWindowDimensions()
+  const wide = window.width >= 760 && window.width > window.height
   const [air, setAir] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   // with the phone's keyboard open the tab bar steps aside: the room is for the touchpad
   const [typing, setTyping] = useState(false)
+  // On Android 15 (edge to edge) the window no longer shrinks for the keyboard, which then covers
+  // the touchpad: if the window kept its height, the keyboard's room is left free by hand
+  const [keyboardRoom, setKeyboardRoom] = useState(0)
+  const bottomInset = useRef(insets.bottom)
+  bottomInset.current = insets.bottom
   useEffect(() => {
-    const show = Keyboard.addListener('keyboardDidShow', () => setTyping(true))
-    const hide = Keyboard.addListener('keyboardDidHide', () => setTyping(false))
-    return () => { show.remove(); hide.remove() }
+    let closedHeight = Dimensions.get('window').height
+    let timer: ReturnType<typeof setTimeout> | null = null
+    const show = Keyboard.addListener('keyboardDidShow', e => {
+      setTyping(true)
+      const keyboard = e.endCoordinates.height
+      timer = setTimeout(() => {
+        const shrunk = closedHeight - Dimensions.get('window').height > keyboard / 2
+        // (the keyboard's height leaves out the navigation bar under it)
+        setKeyboardRoom(shrunk ? 0 : keyboard + bottomInset.current)
+      }, 120)
+    })
+    const hide = Keyboard.addListener('keyboardDidHide', () => {
+      if (timer) clearTimeout(timer)
+      setTyping(false)
+      setKeyboardRoom(0)
+      setTimeout(() => { closedHeight = Dimensions.get('window').height }, 200)
+    })
+    return () => { show.remove(); hide.remove(); if (timer) clearTimeout(timer) }
   }, [])
 
   useEffect(() => {
@@ -92,18 +114,19 @@ export function ControlScreen({ onBack }: { onBack: () => void }) {
 
       <View style={{ flex: 1, paddingHorizontal: 12, paddingTop: 4, opacity: status === 'connected' ? 1 : 0.55 }}>
         {tab === 'mouse' ? <MouseTab air={air} /> : (
-          <>
-            <View style={{ flex: 1 }}>
+          // the pointer is always at hand: a small touchpad under every other tab, or beside it on a
+          // wide screen (a tablet or a phone on its side), where it can be as tall as the screen
+          <View style={{ flex: 1, flexDirection: wide ? 'row' : 'column', gap: wide ? 12 : 0 }}>
+            <View style={wide ? { flex: 1, maxWidth: 620 } : { flex: 1 }}>
               {tab === 'keyboard' && <KeyboardTab />}
               {tab === 'media' && <MediaTab />}
               {tab === 'apps' && <AppsTab />}
               {tab === 'more' && <MoreTab onLeave={onBack} />}
             </View>
-            {/* the pointer is always at hand: a small touchpad under every other tab */}
-            <View style={{ height: settings.showButtons ? 196 : 140, paddingTop: 10 }}>
-              <MouseTab air={air} compact />
+            <View style={wide ? { flex: 1, paddingBottom: 4 } : { height: settings.showButtons ? 196 : 140, paddingTop: 10 }}>
+              <MouseTab air={air} compact={!wide} />
             </View>
-          </>
+          </View>
         )}
       </View>
 
@@ -124,7 +147,7 @@ export function ControlScreen({ onBack }: { onBack: () => void }) {
           )
         })}
       </View>}
-      {typing && <View style={{ height: 8 }} />}
+      {typing && <View style={{ height: 8 + keyboardRoom }} />}
     </View>
   )
 }

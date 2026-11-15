@@ -9,7 +9,7 @@ Lo que pide Play Console para publicar El Puntero (paquete `com.ikerlorente11.pu
 | `icono-512.png` | Icono de la aplicación: 512 × 512, PNG sin transparencia (Play aplica su máscara) |
 | `grafico-destacado-1024x500.png` | Gráfico destacado: 1024 × 500, PNG de 24 bits |
 | `capturas-movil/01…08-*.png` | Capturas de teléfono: 1080 × 1920 (9:16), en el orden en que se suben |
-| `capturas-tablet/01…08-*.png` | Capturas de tablet de 7" y 10": 1440 × 2560 (9:16, la tablet en vertical) |
+| `capturas-tablet/01…08-*.png` | Capturas de tablet de 7" y 10": 2560 × 1440 (16:9, la tablet en horizontal) |
 
 `make_store.py` (común a todas las apps, con Pillow y Segoe UI) rehace `icono-512.png`, el gráfico destacado y las
 capturas enmarcadas a partir de `icono-fuente.png` (el `assets/icon.png` de la app), las capturas en bruto de
