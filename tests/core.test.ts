@@ -217,9 +217,36 @@ describe('air mouse', () => {
     for (let i = 0; i < 10; i++) m = flat.gyro({ x: 0, y: 0, z: 1 }, 0.01)
     expect(Math.abs(m.x)).toBeGreaterThan(1)
   })
+  it('turning out fast and back slowly lands where it started (no acceleration)', () => {
+    const a = new AirMouse({ ...DEFAULT_AIR, accel: 0 })
+    for (let i = 0; i < 40; i++) a.accel({ x: 0, y: 9.8, z: 0 })
+    let x = 0
+    for (let i = 0; i < 30; i++) x += a.gyro({ x: 0, y: 2.0, z: 0 }, 0.01).x    // 0.6 rad out, quickly
+    for (let i = 0; i < 300; i++) x += a.gyro({ x: 0, y: -0.2, z: 0 }, 0.01).x  // 0.6 rad back, slowly
+    for (let i = 0; i < 20; i++) x += a.gyro({ x: 0, y: 0, z: 0 }, 0.01).x
+    expect(Math.abs(x)).toBeLessThan(3)
+  })
+  it('with a mild acceleration the miss stays small', () => {
+    const a = new AirMouse({ ...DEFAULT_AIR, accel: 0.15 })
+    for (let i = 0; i < 40; i++) a.accel({ x: 0, y: 9.8, z: 0 })
+    let x = 0, out = 0
+    for (let i = 0; i < 30; i++) { const m = a.gyro({ x: 0, y: 2.0, z: 0 }, 0.01).x; x += m; out += m }
+    for (let i = 0; i < 300; i++) x += a.gyro({ x: 0, y: -0.2, z: 0 }, 0.01).x
+    for (let i = 0; i < 20; i++) x += a.gyro({ x: 0, y: 0, z: 0 }, 0.01).x
+    expect(Math.abs(x) / Math.abs(out)).toBeLessThan(0.1)
+  })
+  it('sideways goes further than up and down for the same turn', () => {
+    const a = new AirMouse(DEFAULT_AIR)
+    for (let i = 0; i < 40; i++) a.accel({ x: 0, y: 9.8, z: 0 })
+    let h = 0, v = 0
+    for (let i = 0; i < 20; i++) h += a.gyro({ x: 0, y: 0.5, z: 0 }, 0.01).x
+    a.reset()
+    for (let i = 0; i < 20; i++) v += a.gyro({ x: 0.5, y: 0, z: 0 }, 0.01).y
+    expect(Math.abs(h) / Math.abs(v)).toBeCloseTo(1.8, 1)
+  })
   it('a hand held still does not drift', () => {
     const a = new AirMouse(DEFAULT_AIR)
-    for (let i = 0; i < 20; i++) expect(a.gyro({ x: 0.01, y: -0.01, z: 0.015 }, 0.01)).toEqual({ x: -0, y: -0 })
+    for (let i = 0; i < 20; i++) expect(a.gyro({ x: 0.006, y: -0.008, z: 0.009 }, 0.01)).toEqual({ x: -0, y: -0 })
   })
 })
 

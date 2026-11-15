@@ -12,6 +12,8 @@ export interface Theme {
   line: string
   accent: string
   accentText: string
+  /** the selected tab's pill */
+  tabOn: string
   amber: string
   ok: string
   warn: string
@@ -20,16 +22,17 @@ export interface Theme {
 
 const dark: Theme = {
   dark: true,
-  bg: '#0f1024',
-  card: '#1a1c3a',
-  raised: '#252851',
-  pad: '#15173a',
-  padLine: '#2c3070',
-  text: '#eceefe',
-  muted: '#9a9dc4',
-  line: '#2c2f5c',
-  accent: '#ffb547',
-  accentText: '#1a1300',
+  bg: '#0d0e12',
+  card: '#16181e',
+  raised: '#1f222a',
+  pad: '#14161c',
+  padLine: '#2b2f3a',
+  text: '#eef0f5',
+  muted: '#9097a6',
+  line: '#252831',
+  accent: '#a395ff',
+  accentText: '#16112e',
+  tabOn: '#252040',
   amber: '#ffb547',
   ok: '#5cd08d',
   warn: '#ffcf6b',
@@ -38,17 +41,18 @@ const dark: Theme = {
 
 const light: Theme = {
   dark: false,
-  bg: '#f2f2f8',
+  bg: '#f4f5f8',
   card: '#ffffff',
-  raised: '#e8e9f5',
-  pad: '#e4e6f6',
-  padLine: '#c5c8ea',
-  text: '#16173a',
-  muted: '#5d5f86',
-  line: '#dcdcee',
-  accent: '#2b2f77',
+  raised: '#eceef3',
+  pad: '#eef0f5',
+  padLine: '#d3d7e0',
+  text: '#15171c',
+  muted: '#5c6270',
+  line: '#e1e4ea',
+  accent: '#5b4bdb',
   accentText: '#ffffff',
-  amber: '#c27a00',
+  tabOn: '#e9e6fc',
+  amber: '#b86e00',
   ok: '#1f8a4c',
   warn: '#9a6a00',
   danger: '#c62828',

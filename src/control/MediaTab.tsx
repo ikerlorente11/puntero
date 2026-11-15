@@ -83,7 +83,7 @@ export function MediaTab() {
         </Grid>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <Icon name="information-outline" size={16} color={t.muted} />
-          <Text style={{ color: t.muted, fontSize: 12, flex: 1 }}>Con el modo aire de la pestaña Ratón, el móvil hace de puntero láser.</Text>
+          <Text style={{ color: t.muted, fontSize: 12, flex: 1 }}>Con el modo aire (botón Aire, arriba), el móvil hace de puntero láser.</Text>
         </View>
       </Card>
     </ScrollView>

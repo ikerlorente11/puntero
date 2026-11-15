@@ -126,7 +126,7 @@ function Apps() {
               <Icon name="application-outline" size={22} color={t.muted} />
               <Text numberOfLines={1} style={{ color: t.text, flex: 1, fontSize: 15 }}>{a.name}</Text>
               <Pressable hitSlop={10} onPress={() => togglePin(a.id)} style={styles.iconBtn}>
-                <Icon name={pinned ? 'pin' : 'pin-outline'} size={20} color={pinned ? t.amber : t.muted} />
+                <Icon name={pinned ? 'pin' : 'pin-outline'} size={20} color={pinned ? t.accent : t.muted} />
               </Pressable>
             </Pressable>
           )

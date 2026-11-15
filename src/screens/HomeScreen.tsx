@@ -146,7 +146,7 @@ export function HomeScreen({ onOpen, incomingLink, clearIncoming }: { onOpen: (p
       )}
       {busy && (
         <View style={[StyleSheet.absoluteFill, styles.busy]}>
-          <ActivityIndicator size="large" color={t.amber} />
+          <ActivityIndicator size="large" color={t.accent} />
           <Text style={{ color: '#fff', marginTop: 12 }}>Emparejando con {busy}…</Text>
         </View>
       )}
@@ -184,7 +184,7 @@ function QrModal({ onClose, onLink }: { onClose: () => void; onLink: (l: PairLin
           </View>
         )}
         <View style={styles.qrOverlay} pointerEvents="box-none">
-          <View style={[styles.qrFrame, { borderColor: t.amber }]} />
+          <View style={[styles.qrFrame, { borderColor: t.accent }]} />
           <Text style={styles.qrText}>{wrong ? 'Ese QR no es de El Puntero' : 'Apunta al QR de la ventana de El Puntero en el PC'}</Text>
           <Btn label="Cancelar" onPress={onClose} style={{ marginTop: 24, paddingHorizontal: 28 }} />
         </View>

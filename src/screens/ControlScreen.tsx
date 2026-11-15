@@ -1,7 +1,7 @@
 // Controlling one PC: a header with its name and the connection, the five tabs and the tab bar.
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake'
 import { useEffect, useState } from 'react'
-import { BackHandler, Pressable, StyleSheet, Text, View } from 'react-native'
+import { BackHandler, Keyboard, Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { AppsTab } from '../control/AppsTab'
 import { KeyboardTab } from '../control/KeyboardTab'
@@ -31,6 +31,13 @@ export function ControlScreen({ onBack }: { onBack: () => void }) {
   const [tab, setTab] = useState<Tab>('mouse')
   const [air, setAir] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  // with the phone's keyboard open the tab bar steps aside: the room is for the touchpad
+  const [typing, setTyping] = useState(false)
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', () => setTyping(true))
+    const hide = Keyboard.addListener('keyboardDidHide', () => setTyping(false))
+    return () => { show.remove(); hide.remove() }
+  }, [])
 
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -54,7 +61,6 @@ export function ControlScreen({ onBack }: { onBack: () => void }) {
     return () => clearTimeout(h)
   }, [notice])
 
-  useEffect(() => { if (tab !== 'mouse') setAir(false) }, [tab])
 
   const dot = status === 'connected' ? t.ok : status === 'failed' ? t.danger : t.warn
   const line = status === 'connected' ? 'Conectado' : status === 'failed' ? (error ?? 'Sin conexión') : error ? `Conectando… ${error}` : 'Conectando…'
@@ -72,7 +78,7 @@ export function ControlScreen({ onBack }: { onBack: () => void }) {
             <Text numberOfLines={1} style={{ color: t.muted, fontSize: 12, flex: 1 }}>{line}</Text>
           </View>
         </Pressable>
-        {tab === 'mouse' && (
+        {(
           <Pressable
             onPress={() => { haptic('medium'); setAir(a => !a) }}
             style={[styles.airBtn, { backgroundColor: air ? t.amber : t.raised }]}
@@ -85,32 +91,40 @@ export function ControlScreen({ onBack }: { onBack: () => void }) {
       </View>
 
       <View style={{ flex: 1, paddingHorizontal: 12, paddingTop: 4, opacity: status === 'connected' ? 1 : 0.55 }}>
-        {tab === 'mouse' && <MouseTab air={air} />}
-        {tab === 'keyboard' && <KeyboardTab />}
-        {tab === 'media' && <MediaTab />}
-        {tab === 'apps' && <AppsTab />}
-        {tab === 'more' && <MoreTab onLeave={onBack} />}
+        {tab === 'mouse' ? <MouseTab air={air} /> : (
+          <>
+            <View style={{ flex: 1 }}>
+              {tab === 'keyboard' && <KeyboardTab />}
+              {tab === 'media' && <MediaTab />}
+              {tab === 'apps' && <AppsTab />}
+              {tab === 'more' && <MoreTab onLeave={onBack} />}
+            </View>
+            {/* the pointer is always at hand: a small touchpad under every other tab */}
+            <View style={{ height: settings.showButtons ? 196 : 140, paddingTop: 10 }}>
+              <MouseTab air={air} compact />
+            </View>
+          </>
+        )}
       </View>
 
       {toast && (
-        <View style={[styles.toast, { backgroundColor: t.raised, bottom: insets.bottom + 76 }]}>
+        <View style={[styles.toast, { backgroundColor: t.raised, top: insets.top + 64 }]}>
           <Text style={{ color: t.text }}>{toast}</Text>
         </View>
       )}
 
-      <View style={[styles.tabs, { paddingBottom: insets.bottom + 6, borderTopColor: t.line, backgroundColor: t.card }]}>
+      {!typing && <View style={[styles.tabs, { paddingBottom: insets.bottom + 6, borderTopColor: t.line, backgroundColor: t.card }]}>
         {TABS.map(item => {
           const on = item.id === tab
           return (
-            <Pressable key={item.id} onPress={() => { haptic(); setTab(item.id) }} style={styles.tab} accessibilityRole="tab" accessibilityState={{ selected: on }}>
-              <View style={[styles.tabIcon, on && { backgroundColor: t.raised }]}>
-                <Icon name={item.icon} size={22} color={on ? t.accent : t.muted} />
-              </View>
-              <Text style={{ color: on ? t.text : t.muted, fontSize: 11, fontWeight: on ? '700' : '500' }}>{item.label}</Text>
+            <Pressable key={item.id} onPress={() => { haptic(); setTab(item.id) }} style={[styles.tab, on && { backgroundColor: t.tabOn }]} accessibilityRole="tab" accessibilityState={{ selected: on }}>
+              <Icon name={item.icon} size={22} color={on ? t.accent : t.muted} />
+              <Text numberOfLines={1} style={{ color: on ? t.text : t.muted, fontSize: 11, fontWeight: on ? '700' : '500' }}>{item.label}</Text>
             </Pressable>
           )
         })}
-      </View>
+      </View>}
+      {typing && <View style={{ height: 8 }} />}
     </View>
   )
 }
@@ -121,8 +135,7 @@ const styles = StyleSheet.create({
   pcName: { fontSize: 17, fontWeight: '800' },
   dot: { width: 8, height: 8, borderRadius: 4 },
   airBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 20 },
-  tabs: { flexDirection: 'row', borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 6 },
-  tab: { flex: 1, alignItems: 'center', gap: 2 },
-  tabIcon: { paddingHorizontal: 16, paddingVertical: 4, borderRadius: 14 },
+  tabs: { flexDirection: 'row', borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 8, paddingHorizontal: 6, marginTop: 10, gap: 4 },
+  tab: { flex: 1, alignItems: 'center', gap: 3, paddingVertical: 7, borderRadius: 18, borderCurve: 'continuous' },
   toast: { position: 'absolute', left: 20, right: 20, padding: 12, borderRadius: 12, alignItems: 'center' },
 })

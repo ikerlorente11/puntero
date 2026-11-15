@@ -30,7 +30,8 @@ function out(o: Output) {
   else send(o)
 }
 
-export function MouseTab({ air }: { air: boolean }) {
+/** compact: the small pad under the other tabs (touchpad, strip and buttons, shorter, no hints) */
+export function MouseTab({ air, compact = false }: { air: boolean; compact?: boolean }) {
   const t = useTheme()
   const { settings } = useData()
   const [size, setSize] = useState({ w: 0, h: 0 })
@@ -38,7 +39,7 @@ export function MouseTab({ air }: { air: boolean }) {
   const surface = useRef<HostInstance>(null)
   const zones = useRef(new Map<number, Zone>())
   const [held, setHeld] = useState<Record<string, boolean>>({})
-  const buttonsH = settings.showButtons ? 84 : 0
+  const buttonsH = settings.showButtons ? (compact ? 50 : 84) : 0
 
   const pad = useMemo(() => new Touchpad(settings.pad, out, clock), [])
   const strip = useMemo(() => new Wheel(settings.pad, out, clock), [])
@@ -90,6 +91,10 @@ export function MouseTab({ air }: { air: boolean }) {
   }
 
   const start = (e: GestureResponderEvent) => {
+    // where the surface is on screen, from the touch itself (the surface moves when the keyboard opens)
+    // (only with the first finger down: Android's locationX of a second finger is not reliable)
+    const ev = e.nativeEvent
+    if (ev.touches.length === ev.changedTouches.length) origin.current = { x: ev.pageX - ev.locationX, y: ev.pageY - ev.locationY }
     for (const touch of e.nativeEvent.changedTouches) {
       const x = touch.pageX - origin.current.x
       const y = touch.pageY - origin.current.y
@@ -143,7 +148,7 @@ export function MouseTab({ air }: { air: boolean }) {
   }, [])
 
   const btnStyle = (on: boolean) => [styles.button, { backgroundColor: on ? t.accent : t.raised }]
-  const btnText = (on: boolean) => ({ color: on ? t.accentText : t.muted, fontWeight: '700' as const, fontSize: 13 })
+  const btnText = (on: boolean) => ({ color: on ? t.accentText : t.muted, fontWeight: '700' as const, fontSize: compact ? 12 : 13, letterSpacing: 0.6 })
 
   return (
     <View
@@ -161,12 +166,14 @@ export function MouseTab({ air }: { air: boolean }) {
       {size.w > 0 && (
         <>
           <View pointerEvents="none" style={[styles.pad, { width: size.w - STRIP_W - GAP, height: padH, backgroundColor: t.pad, borderColor: air ? t.amber : t.padLine }]}>
-            <Icon name={air ? 'rotate-3d-variant' : 'gesture-tap'} size={40} color={t.padLine} />
-            <Text style={[styles.hint, { color: t.muted }]}>
-              {air
-                ? settings.airHold ? 'Deja el pulgar aquí y gira el móvil para mover\nToca para clic' : 'Gira el móvil para mover · Toca para clic'
-                : 'Desliza para mover · Toca para clic\nDos dedos: desplazar, pellizcar o clic derecho\nMantén pulsado para arrastrar'}
-            </Text>
+            <Icon name={air ? 'rotate-3d-variant' : 'gesture-tap'} size={compact ? 24 : 40} color={t.padLine} />
+            {!compact && (
+              <Text style={[styles.hint, { color: t.muted }]}>
+                {air
+                  ? settings.airHold ? 'Deja el pulgar aquí y gira el móvil para mover\nToca para clic' : 'Gira el móvil para mover · Toca para clic'
+                  : 'Desliza para mover · Toca para clic\nDos dedos: desplazar, pellizcar o clic derecho\nMantén pulsado para arrastrar'}
+              </Text>
+            )}
           </View>
           <View pointerEvents="none" style={[styles.strip, { left: size.w - STRIP_W, width: STRIP_W, height: padH, backgroundColor: t.pad, borderColor: t.padLine }]}>
             <Icon name="chevron-up" color={t.muted} />

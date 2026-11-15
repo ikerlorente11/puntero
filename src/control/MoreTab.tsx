@@ -106,6 +106,8 @@ export function MoreTab({ onLeave }: { onLeave: () => void }) {
 
       <Card title="Modo aire (giroscopio)">
         <SliderRow label="Sensibilidad" value={air.sensitivity} min={300} max={3000} step={50} onChange={v => setAir({ sensitivity: v })} format={v => `${Math.round(v / 11)} %`} />
+        <SliderRow label="Recorrido a los lados" value={air.horizontal} min={1} max={3} step={0.1} onChange={v => setAir({ horizontal: v })} format={v => `×${v.toFixed(1)}`} />
+        <SliderRow label="Aceleración" value={air.accel} min={0} max={1} step={0.05} onChange={v => setAir({ accel: v })} format={v => (v === 0 ? 'Ninguna (vuelve exacto)' : v.toFixed(2))} />
         <SwitchRow label="Mover solo con el pulgar en el touchpad" hint="Como el botón de un puntero láser: sueltas y el puntero se queda quieto" value={settings.airHold} onChange={v => updateSettings({ airHold: v })} />
         <SwitchRow label="Invertir horizontal" value={air.invertX} onChange={v => setAir({ invertX: v })} />
         <SwitchRow label="Invertir vertical" value={air.invertY} onChange={v => setAir({ invertY: v })} />

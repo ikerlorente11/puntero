@@ -69,7 +69,7 @@ export function KeyboardTab() {
         options={[{ value: 'live', label: 'En directo', icon: 'keyboard-outline' }, { value: 'compose', label: 'Redactar', icon: 'text-box-edit-outline' }]}
       />
       {mode === 'live' ? (
-        <View style={[styles.live, { backgroundColor: t.card, borderColor: mods.length ? t.amber : t.line }]}>
+        <View style={[styles.live, { backgroundColor: t.card, borderColor: mods.length ? t.accent : t.line }]}>
           <TextInput
             ref={input}
             value={buffer}
