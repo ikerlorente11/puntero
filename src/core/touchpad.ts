@@ -27,6 +27,8 @@ export interface PadSettings {
   scrollSpeed: number
   /** content follows the fingers (like a phone or a Windows touchpad); off = like a mouse wheel */
   naturalScroll: boolean
+  /** the scroll strip and the wheel button go the other way round (two fingers are not affected) */
+  invertWheel: boolean
   tapToClick: boolean
   /** tap then touch-and-move drags (single taps wait a moment for that) */
   tapDrag: boolean
@@ -39,6 +41,7 @@ export const DEFAULT_PAD: PadSettings = {
   accel: 0.7,
   scrollSpeed: 2.2,
   naturalScroll: true,
+  invertWheel: false,
   tapToClick: true,
   tapDrag: true,
   longPressDrag: true,
@@ -347,7 +350,7 @@ export class Wheel {
     this.y = y
     if (Math.abs(y - this.sy) > SLOP) this.moved = true
     if (!this.moved) return
-    const k = this.settings.scrollSpeed * 1.4 * (this.settings.naturalScroll ? 1 : -1)
+    const k = this.factor()
     this.emit({ t: 'scroll', x: 0, y: dy * k })
     // a light tick every ~notch, like a real wheel
     const ticks = Math.floor(Math.abs(y - this.sy) / 24)
@@ -365,7 +368,7 @@ export class Wheel {
     }
     if (!this.settings.inertia || t - this.vt > 80 || Math.abs(this.v) < 0.3) return
     let v = this.v
-    const k = this.settings.scrollSpeed * 1.4 * (this.settings.naturalScroll ? 1 : -1)
+    const k = this.factor()
     const step = () => {
       v *= 0.94
       if (Math.abs(v) < 0.04) { this.glide = null; return }
@@ -373,6 +376,12 @@ export class Wheel {
       this.glide = this.clock.after(FRAME_MS, step)
     }
     this.glide = this.clock.after(FRAME_MS, step)
+  }
+
+  /** wheel units per dp: a bit faster than two fingers, and the way round the settings say */
+  private factor() {
+    const s = this.settings
+    return s.scrollSpeed * 1.4 * (s.naturalScroll ? 1 : -1) * (s.invertWheel ? -1 : 1)
   }
 
   cancel() {

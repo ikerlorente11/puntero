@@ -1,12 +1,13 @@
 // More: power (lock, screen off, sleep, restart, shut down), Windows and browser shortcuts, the
-// clipboard both ways, the settings, and this PC.
+// clipboard both ways, this PC, and the way to the settings (the same as from the PCs).
 import * as Clipboard from 'expo-clipboard'
-import { useEffect, useRef } from 'react'
-import { Alert, ScrollView, Text, View } from 'react-native'
+import { useEffect, useRef, useState } from 'react'
+import { Alert, Modal, ScrollView, Text, View } from 'react-native'
 import { disconnect, send, useLive } from '../live'
-import { forgetPc, getData, updateSettings, useData } from '../store'
+import { SettingsScreen } from '../screens/SettingsScreen'
+import { forgetPc } from '../store'
 import { useTheme } from '../theme'
-import { Btn, Card, Grid, haptic, SliderRow, SwitchRow } from '../ui'
+import { Btn, Card, Grid, haptic } from '../ui'
 
 const key = (k: string, mods: string[] = []) => () => { haptic(); send({ t: 'key', k, mods }) }
 
@@ -16,13 +17,9 @@ function confirm(title: string, message: string, action: () => void) {
 
 export function MoreTab({ onLeave }: { onLeave: () => void }) {
   const t = useTheme()
-  const { settings } = useData()
   const { pc, clip, latency, version } = useLive()
   const asked = useRef(0)
-  const pad = settings.pad
-  const air = settings.air
-  const setPad = (patch: Partial<typeof pad>) => updateSettings({ pad: { ...getData().settings.pad, ...patch } })
-  const setAir = (patch: Partial<typeof air>) => updateSettings({ air: { ...getData().settings.air, ...patch } })
+  const [settings, setSettings] = useState(false)
 
   // the PC's clipboard arrives as an event: copy it into the phone's when we asked for it
   useEffect(() => {
@@ -92,32 +89,7 @@ export function MoreTab({ onLeave }: { onLeave: () => void }) {
         </View>
       </Card>
 
-      <Card title="Touchpad">
-        <SliderRow label="Velocidad del puntero" value={pad.speed} min={0.5} max={4} step={0.1} onChange={v => setPad({ speed: v })} />
-        <SliderRow label="Aceleración" value={pad.accel} min={0} max={1.5} step={0.05} onChange={v => setPad({ accel: v })} format={v => (v === 0 ? 'Ninguna' : v.toFixed(2))} />
-        <SliderRow label="Velocidad del desplazamiento" value={pad.scrollSpeed} min={0.5} max={6} step={0.1} onChange={v => setPad({ scrollSpeed: v })} />
-        <SwitchRow label="Desplazamiento natural" hint="El contenido sigue a los dedos, como en el móvil" value={pad.naturalScroll} onChange={v => setPad({ naturalScroll: v })} />
-        <SwitchRow label="Inercia" hint="Al desplazar rápido, sigue un poco tras soltar" value={pad.inertia} onChange={v => setPad({ inertia: v })} />
-        <SwitchRow label="Tocar para hacer clic" value={pad.tapToClick} onChange={v => setPad({ tapToClick: v })} />
-        <SwitchRow label="Tocar y arrastrar" hint="Toca, vuelve a tocar y mueve para arrastrar (el clic espera un instante)" value={pad.tapDrag} onChange={v => setPad({ tapDrag: v })} />
-        <SwitchRow label="Mantener pulsado para arrastrar" value={pad.longPressDrag} onChange={v => setPad({ longPressDrag: v })} />
-        <SwitchRow label="Botones bajo el touchpad" value={settings.showButtons} onChange={v => updateSettings({ showButtons: v })} />
-      </Card>
-
-      <Card title="Modo aire (giroscopio)">
-        <SliderRow label="Sensibilidad" value={air.sensitivity} min={300} max={3000} step={50} onChange={v => setAir({ sensitivity: v })} format={v => `${Math.round(v / 11)} %`} />
-        <SliderRow label="Recorrido a los lados" value={air.horizontal} min={1} max={3} step={0.1} onChange={v => setAir({ horizontal: v })} format={v => `×${v.toFixed(1)}`} />
-        <SliderRow label="Aceleración" value={air.accel} min={0} max={1} step={0.05} onChange={v => setAir({ accel: v })} format={v => (v === 0 ? 'Ninguna (vuelve exacto)' : v.toFixed(2))} />
-        <SwitchRow label="Mover solo con el pulgar en el touchpad" hint="Como el botón de un puntero láser: sueltas y el puntero se queda quieto" value={settings.airHold} onChange={v => updateSettings({ airHold: v })} />
-        <SwitchRow label="Invertir horizontal" value={air.invertX} onChange={v => setAir({ invertX: v })} />
-        <SwitchRow label="Invertir vertical" value={air.invertY} onChange={v => setAir({ invertY: v })} />
-      </Card>
-
-      <Card title="General">
-        <SwitchRow label="Vibrar al tocar" value={settings.haptics} onChange={v => updateSettings({ haptics: v })} />
-        <SwitchRow label="Mantener la pantalla encendida" hint="Mientras controlas el PC" value={settings.keepAwake} onChange={v => updateSettings({ keepAwake: v })} />
-        <SwitchRow label="Conectar al último PC al abrir" hint="Si está encendido y en la misma wifi, la app va directa a él" value={settings.autoConnect} onChange={v => updateSettings({ autoConnect: v })} />
-      </Card>
+      <Btn icon="cog-outline" label="Ajustes (touchpad, modo aire, conexión…)" onPress={() => setSettings(true)} />
 
       {pc && (
         <Card title="Este PC">
@@ -130,6 +102,12 @@ export function MoreTab({ onLeave }: { onLeave: () => void }) {
             <Btn icon="delete-outline" label="Olvidar" danger style={{ flex: 1 }} onPress={() => confirm('Olvidar', `¿Olvidar ${pc.name}? Tendrás que volver a emparejarlo.`, () => { forgetPc(pc.id); disconnect(); onLeave() })} />
           </View>
         </Card>
+      )}
+
+      {settings && (
+        <Modal animationType="slide" onRequestClose={() => setSettings(false)}>
+          <SettingsScreen onClose={() => setSettings(false)} />
+        </Modal>
       )}
     </ScrollView>
   )

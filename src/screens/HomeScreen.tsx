@@ -1,5 +1,5 @@
-// The PCs: the paired ones (tap to control), the ones found on the network (tap to pair with the
-// code) and "Escanear QR" to pair with the QR the PC shows.
+// The PCs: the paired ones that answer right now (tap to control; the rest folded away), the ones
+// found on the network (tap to pair with the code) and "Escanear QR" to pair with the QR the PC shows.
 import { CameraView, useCameraPermissions } from 'expo-camera'
 import * as Linking from 'expo-linking'
 import * as Network from 'expo-network'
@@ -7,16 +7,21 @@ import { useEffect, useRef, useState } from 'react'
 import { ActivityIndicator, Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { pair, Pc } from '../core/client'
-import { DEFAULT_PORT, parsePairLink, PairLink } from '../core/link'
-import { FoundPc, scan } from '../core/scan'
-import { forgetPc, getData, savePc, useData } from '../store'
+import { parsePairLink, PairLink, PORTS } from '../core/link'
+import { FoundPc, findPc, scan } from '../core/scan'
+import { forgetPc, getData, savePc, updatePc, useData } from '../store'
+import { PC_DOWNLOAD } from './SettingsScreen'
 import { useTheme } from '../theme'
 import { Btn, Card, haptic, Icon } from '../ui'
 
-/** the Windows half: the README of the repo has the download and the instructions */
-const PC_DOWNLOAD = 'https://github.com/ikerlorente11/puntero#el-pc'
+type Where = { host: string; port: number }
 
-export function HomeScreen({ onOpen, incomingLink, clearIncoming }: { onOpen: (pc: Pc) => void; incomingLink: string | null; clearIncoming: () => void }) {
+export function HomeScreen({ onOpen, onSettings, incomingLink, clearIncoming }: {
+  onOpen: (pc: Pc) => void
+  onSettings: () => void
+  incomingLink: string | null
+  clearIncoming: () => void
+}) {
   const t = useTheme()
   const insets = useSafeAreaInsets()
   const { pcs } = useData()
@@ -27,6 +32,20 @@ export function HomeScreen({ onOpen, incomingLink, clearIncoming }: { onOpen: (p
   const [codeFor, setCodeFor] = useState<{ hosts: string[]; port: number; id?: string; name: string } | null>(null)
   const [manual, setManual] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
+  /** each paired PC: where it answered, or 'off', or not known yet */
+  const [reach, setReach] = useState<Record<string, Where | 'off'>>({})
+  const [showOff, setShowOff] = useState(false)
+
+  /** asks each paired PC directly (faster and surer than the scan), on its address and ports */
+  const checkPcs = () => {
+    setReach({})
+    for (const pc of getData().pcs) {
+      findPc(fetch as any, pc, 2000).then(at => {
+        setReach(r => ({ ...r, [pc.id]: at ?? 'off' }))
+        if (at && (at.host !== pc.lastHost || at.port !== pc.port)) updatePc({ ...pc, lastHost: at.host, port: at.port })
+      })
+    }
+  }
 
   const runScan = async () => {
     if (scanning) return
@@ -35,7 +54,7 @@ export function HomeScreen({ onOpen, incomingLink, clearIncoming }: { onOpen: (p
     setFound([])
     try {
       const ip = await Network.getIpAddressAsync()
-      const hits = await scan(fetch as any, ip, DEFAULT_PORT, pc => setFound(f => [...f, pc]))
+      const hits = await scan(fetch as any, ip, PORTS, pc => setFound(f => [...f, pc]))
       if (!hits.length) setScanNote('No aparece ningún PC. ¿Está El Puntero abierto en el PC y el móvil en la misma wifi?')
     } catch {
       setScanNote('No se puede buscar: ¿estás conectado a una wifi?')
@@ -44,9 +63,11 @@ export function HomeScreen({ onOpen, incomingLink, clearIncoming }: { onOpen: (p
     }
   }
 
-  useEffect(() => { runScan() }, [])
+  const refreshAll = () => { checkPcs(); runScan() }
 
-  const pairWith = async (target: { hosts: string[]; port: number; id?: string }, secret: Parameters<typeof pair>[3], label: string) => {
+  useEffect(() => { refreshAll() }, [])
+
+  const pairWith = async (target: { hosts: string[]; port: number | null; id?: string }, secret: Parameters<typeof pair>[3], label: string) => {
     setBusy(label)
     try {
       const pc = await pair(WebSocket as any, getData().identity, target, secret)
@@ -74,36 +95,84 @@ export function HomeScreen({ onOpen, incomingLink, clearIncoming }: { onOpen: (p
 
   const known = new Set(pcs.map(p => p.id))
   const others = found.filter(f => !known.has(f.id))
-  const online = new Set(found.map(f => f.id))
+  const where = (pc: Pc): Where | null => {
+    const r = reach[pc.id]
+    if (r && r !== 'off') return r
+    const f = found.find(x => x.id === pc.id)
+    return f ? { host: f.host, port: f.port } : null
+  }
+  const available = pcs.filter(pc => where(pc))
+  const checking = pcs.filter(pc => !where(pc) && reach[pc.id] === undefined)
+  const away = pcs.filter(pc => !where(pc) && reach[pc.id] === 'off')
+  const forget = (pc: Pc) => Alert.alert(pc.name, '¿Olvidar este PC? Tendrás que volver a emparejarlo.', [
+    { text: 'Cancelar', style: 'cancel' },
+    { text: 'Olvidar', style: 'destructive', onPress: () => forgetPc(pc.id) },
+  ])
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <ScrollView contentContainerStyle={{ padding: 16, paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24, gap: 14, width: '100%', maxWidth: 640, alignSelf: 'center' }}>
         <View style={styles.header}>
           <Image source={require("../../assets/icon.png")} style={{ width: 34, height: 34, borderRadius: 9 }} />
-          <Text style={[styles.title, { color: t.text }]}>El Puntero</Text>
+          <Text style={[styles.title, { color: t.text, flex: 1 }]}>El Puntero</Text>
+          <Pressable onPress={onSettings} hitSlop={10} style={{ padding: 6 }} accessibilityLabel="Ajustes">
+            <Icon name="cog-outline" size={26} color={t.text} />
+          </Pressable>
         </View>
 
         {pcs.length > 0 && (
           <Card title="Tus PCs">
-            {pcs.map(pc => (
+            {available.map(pc => {
+              const at = where(pc)!
+              return (
+                <Pressable
+                  key={pc.id}
+                  onPress={() => { haptic(); onOpen({ ...pc, lastHost: at.host, port: at.port }) }}
+                  onLongPress={() => forget(pc)}
+                  style={({ pressed }) => [styles.pcRow, { backgroundColor: pressed ? t.raised : 'transparent' }]}
+                >
+                  <Icon name="monitor" size={28} color={t.accent} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.pcName, { color: t.text }]}>{pc.name}</Text>
+                    <Text style={{ color: t.ok, fontSize: 12 }}>Disponible · {at.host}</Text>
+                  </View>
+                  <Icon name="chevron-right" color={t.muted} />
+                </Pressable>
+              )
+            })}
+            {checking.length > 0 && !available.length && (
+              <View style={[styles.pcRow, { opacity: 0.8 }]}>
+                <ActivityIndicator color={t.accent} />
+                <Text style={{ color: t.muted, flex: 1 }}>Buscando tus PCs en esta red…</Text>
+              </View>
+            )}
+            {!checking.length && !available.length && (
+              <Text style={{ color: t.muted, lineHeight: 20 }}>
+                Ninguno de tus PCs responde ahora. Comprueba que El Puntero esté abierto en el PC y que el móvil esté en la misma wifi.
+              </Text>
+            )}
+            {away.length > 0 && (
+              <Pressable onPress={() => setShowOff(v => !v)} hitSlop={6} style={styles.offHead}>
+                <Text style={{ color: t.muted, fontWeight: '600', flex: 1 }}>No disponibles ahora ({away.length})</Text>
+                <Icon name={showOff ? 'chevron-up' : 'chevron-down'} color={t.muted} />
+              </Pressable>
+            )}
+            {showOff && away.map(pc => (
               <Pressable
                 key={pc.id}
-                onPress={() => { haptic(); onOpen(pc) }}
-                onLongPress={() => Alert.alert(pc.name, '¿Olvidar este PC? Tendrás que volver a emparejarlo.', [
+                onPress={() => Alert.alert(pc.name, 'No responde en esta red ahora mismo.', [
                   { text: 'Cancelar', style: 'cancel' },
                   { text: 'Olvidar', style: 'destructive', onPress: () => forgetPc(pc.id) },
+                  { text: 'Intentar conectar', onPress: () => onOpen(pc) },
                 ])}
-                style={({ pressed }) => [styles.pcRow, { backgroundColor: pressed ? t.raised : 'transparent' }]}
+                onLongPress={() => forget(pc)}
+                style={({ pressed }) => [styles.pcRow, { opacity: 0.55, backgroundColor: pressed ? t.raised : 'transparent' }]}
               >
-                <Icon name="monitor" size={28} color={t.accent} />
+                <Icon name="monitor-off" size={26} color={t.muted} />
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.pcName, { color: t.text }]}>{pc.name}</Text>
-                  <Text style={{ color: online.has(pc.id) ? t.ok : t.muted, fontSize: 12 }}>
-                    {online.has(pc.id) ? 'En la red ahora' : pc.lastHost ?? pc.hosts[0]}
-                  </Text>
+                  <Text style={{ color: t.muted, fontSize: 12 }}>Visto en {pc.lastHost ?? pc.hosts[0]}</Text>
                 </View>
-                <Icon name="chevron-right" color={t.muted} />
               </Pressable>
             ))}
           </Card>
@@ -121,7 +190,7 @@ export function HomeScreen({ onOpen, incomingLink, clearIncoming }: { onOpen: (p
           <View style={styles.foundHead}>
             <Text style={{ color: t.muted, fontWeight: '600' }}>PCs en esta red</Text>
             {scanning ? <ActivityIndicator color={t.accent} /> : (
-              <Pressable onPress={runScan} hitSlop={10}><Icon name="refresh" color={t.accent} /></Pressable>
+              <Pressable onPress={refreshAll} hitSlop={10} accessibilityLabel="Buscar otra vez"><Icon name="refresh" color={t.accent} /></Pressable>
             )}
           </View>
           {others.map(f => (
@@ -205,7 +274,7 @@ function CodeModal({ target, busy, onClose, onPair }: {
   target: { hosts: string[]; port: number; id?: string; name: string } | null
   busy: boolean
   onClose: () => void
-  onPair: (target: { hosts: string[]; port: number; id?: string }, code: string) => void
+  onPair: (target: { hosts: string[]; port: number | null; id?: string }, code: string) => void
 }) {
   const t = useTheme()
   const [host, setHost] = useState('')
@@ -216,7 +285,7 @@ function CodeModal({ target, busy, onClose, onPair }: {
     if (!ready) return
     if (target) return onPair(target, digits)
     const [h, p] = host.trim().split(':')
-    onPair({ hosts: [h], port: Number(p) || DEFAULT_PORT }, digits)
+    onPair({ hosts: [h], port: Number(p) || null }, digits)
   }
   return (
     <Modal transparent animationType="fade" onRequestClose={onClose}>
@@ -252,6 +321,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 26, fontWeight: '800' },
   pcRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 6, borderRadius: 12 },
   pcName: { fontSize: 16, fontWeight: '700' },
+  offHead: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 6 },
   foundHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 },
   busy: { backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center' },
   qrOverlay: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },

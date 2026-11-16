@@ -4,7 +4,8 @@ import { parsePairLink } from '../src/core/link'
 import { DEFAULT_PAD, Output, Touchpad, Wheel } from '../src/core/touchpad'
 import { diffText, typingCommands } from '../src/core/typing'
 import { AirMouse, DEFAULT_AIR } from '../src/core/air'
-import { findPc, probe, subnetHosts } from '../src/core/scan'
+import { findPc, probe, scan, subnetHosts } from '../src/core/scan'
+import { portsFor, PORTS } from '../src/core/link'
 
 const hex = (b: Uint8Array) => Buffer.from(b).toString('hex')
 
@@ -186,6 +187,18 @@ describe('wheel strip', () => {
     expect(out.filter(o => o.t === 'scroll').length).toBe(2)
     expect(tapped).toBe(1)
   })
+  it('can go the other way round', () => {
+    const scrolled = (invertWheel: boolean) => {
+      const out: Output[] = []
+      let now = 0
+      const w = new Wheel({ ...DEFAULT_PAD, invertWheel }, o => out.push(o), { now: () => now, after: () => () => {} })
+      w.down(100); now += 16; w.move(130); now += 16; w.move(160)
+      return out.filter(o => o.t === 'scroll').map(o => (o as { y: number }).y)
+    }
+    const normal = scrolled(false)
+    expect(normal.every(y => y > 0)).toBe(true)
+    expect(scrolled(true)).toEqual(normal.map(y => -y))
+  })
 })
 
 describe('typing', () => {
@@ -270,9 +283,40 @@ describe('scan', () => {
       return { ok: true, json: async () => ({ app: 'puntero', id, name: 'PC' }) }
     }
     const pc = { id: 'x', hosts: ['10.0.0.2', '10.0.0.3'], port: 47810, lastHost: '10.0.0.2' }
-    expect(await findPc(at('10.0.0.3', 'x'), pc)).toBe('10.0.0.3')
+    expect(await findPc(at('10.0.0.3', 'x'), pc)).toEqual({ host: '10.0.0.3', port: 47810 })
     expect(await findPc(at('10.0.0.3', 'otro'), pc)).toBeNull()
     expect(await findPc(at('10.0.0.9', 'x'), pc)).toBeNull()
-    expect(await findPc(at('10.0.0.2', 'x'), { ...pc, hosts: [] })).toBe('10.0.0.2')
+    expect(await findPc(at('10.0.0.2', 'x'), { ...pc, hosts: [] })).toEqual({ host: '10.0.0.2', port: 47810 })
+  })
+  it('finds a PC that had to move to another port', async () => {
+    const on = (port: number) => async (url: string) => {
+      if (!url.endsWith(`:${port}/info`)) throw new Error('nadie')
+      return { ok: true, json: async () => ({ app: 'puntero', id: 'x', name: 'PC' }) }
+    }
+    const pc = { id: 'x', hosts: ['10.0.0.2'], port: 47810 }
+    expect(await findPc(on(27810), pc)).toEqual({ host: '10.0.0.2', port: 27810 })
+    // a port only the QR knew is still tried first
+    expect(await findPc(on(51234), { ...pc, port: 51234 })).toEqual({ host: '10.0.0.2', port: 51234 })
+    expect(portsFor(37810)).toEqual([37810, 47810, 27810])
+    expect(PORTS[0]).toBe(47810)
+  })
+  it('scans every port, the usual one first, a few at a time', async () => {
+    const asked: string[] = []
+    let running = 0, most = 0
+    const fetchFn = async (url: string) => {
+      asked.push(url)
+      most = Math.max(most, ++running)
+      await new Promise(r => setTimeout(r, 1))
+      running--
+      if (url === 'http://10.0.0.7:27810/info') return { ok: true, json: async () => ({ app: 'puntero', id: 'x', name: 'PC' }) }
+      throw new Error('nadie')
+    }
+    const seen: string[] = []
+    const found = await scan(fetchFn, '10.0.0.5', PORTS, pc => seen.push(`${pc.host}:${pc.port}`), 16)
+    expect(found.map(f => f.port)).toEqual([27810])
+    expect(seen).toEqual(['10.0.0.7:27810'])
+    expect(asked.length).toBe(253 * 3)
+    expect(asked[0]).toBe('http://10.0.0.1:47810/info')
+    expect(most).toBeLessThanOrEqual(16)
   })
 })

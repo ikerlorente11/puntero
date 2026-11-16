@@ -117,6 +117,11 @@ export function savePc(pc: Pc) {
   update(d => ({ ...d, pcs: [pc, ...d.pcs.filter(p => p.id !== pc.id)], lastPc: pc.id }))
 }
 
+/** A PC answered at another address or port: remembered, without making it the last one used. */
+export function updatePc(pc: Pc) {
+  update(d => ({ ...d, pcs: d.pcs.map(p => (p.id === pc.id ? pc : p)) }))
+}
+
 export function forgetPc(id: string) {
   update(d => ({ ...d, pcs: d.pcs.filter(p => p.id !== id), lastPc: d.lastPc === id ? null : d.lastPc }))
 }

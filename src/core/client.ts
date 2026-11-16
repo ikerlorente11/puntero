@@ -2,6 +2,7 @@
 // says hello (or pairs), then sends sealed commands and gets sealed events. Reconnects on its own
 // while wanted. The WebSocket class is passed in, so the tests run it in Node against the real PC app.
 import { codeKey, fromB64, open, randomBytes, seal, toB64 } from './box'
+import { PORTS, portsFor } from './link'
 
 export interface Pc {
   id: string
@@ -47,13 +48,16 @@ export class PuntError extends Error {
 
 const asBytes = (data: unknown) => (data instanceof ArrayBuffer ? new Uint8Array(data) : ArrayBuffer.isView(data) ? new Uint8Array(data.buffer, data.byteOffset, data.byteLength) : null)
 
-/** Opens a socket to every address at once; the first PC to say hi wins (and must be the right PC). */
-export function reach(Socket: WSClass, hosts: string[], port: number, expectId: string | null, timeoutMs = 3000): Promise<{ ws: WS; hi: Hi; host: string }> {
+/**
+ * Opens a socket to every address on every port at once; the first PC to say hi wins (and must be the
+ * right PC).
+ */
+export function reach(Socket: WSClass, hosts: string[], ports: number[], expectId: string | null, timeoutMs = 3000): Promise<{ ws: WS; hi: Hi; host: string; port: number }> {
   return new Promise((resolve, reject) => {
     const sockets: WS[] = []
     let done = false
     let failures = 0
-    const finish = (err?: Error, win?: { ws: WS; hi: Hi; host: string }) => {
+    const finish = (err?: Error, win?: { ws: WS; hi: Hi; host: string; port: number }) => {
       if (done) return
       done = true
       clearTimeout(timer)
@@ -63,13 +67,14 @@ export function reach(Socket: WSClass, hosts: string[], port: number, expectId: 
     }
     const timer = setTimeout(() => finish(new PuntError('El PC no responde. ¿Está encendido, con El Puntero abierto y en la misma wifi?')), timeoutMs)
     const unique = [...new Set(hosts)]
-    if (!unique.length) return finish(new PuntError('No hay ninguna dirección del PC.'))
-    for (const host of unique) {
+    const tries = unique.flatMap(host => [...new Set(ports)].map(port => ({ host, port })))
+    if (!tries.length) return finish(new PuntError('No hay ninguna dirección del PC.'))
+    for (const { host, port } of tries) {
       let ws: WS
       try { ws = new Socket(`ws://${host.includes(':') && !host.startsWith('[') ? `[${host}]` : host}:${port}/ws`) } catch { failures++; continue }
       ws.binaryType = 'arraybuffer'
       sockets.push(ws)
-      const fail = () => { if (++failures >= unique.length) finish(new PuntError('No se puede conectar con el PC. ¿Está El Puntero abierto en el PC y el móvil en la misma wifi?')) }
+      const fail = () => { if (++failures >= tries.length) finish(new PuntError('No se puede conectar con el PC. ¿Está El Puntero abierto en el PC y el móvil en la misma wifi?')) }
       ws.onerror = fail
       ws.onclose = fail
       ws.onmessage = (e: MessageEvent) => {
@@ -79,10 +84,10 @@ export function reach(Socket: WSClass, hosts: string[], port: number, expectId: 
         if (hi.t !== 'hi' || hi.app !== 'puntero') return
         if (expectId && hi.id !== expectId) { ws.onerror = ws.onclose = null; try { ws.close() } catch {}; fail(); return }
         ws.onmessage = ws.onerror = ws.onclose = null
-        finish(undefined, { ws, hi, host })
+        finish(undefined, { ws, hi, host, port })
       }
     }
-    if (failures >= unique.length) finish(new PuntError('No se puede conectar con el PC.'))
+    if (failures >= tries.length) finish(new PuntError('No se puede conectar con el PC.'))
   })
 }
 
@@ -111,21 +116,22 @@ function greet(ws: WS, hello: object, key: Uint8Array, timeoutMs = 5000): Promis
 
 /**
  * Pairs with a PC: with the QR's key (via "qr") or the 6-digit code (via "code"). Makes this phone's
- * own key for that PC and returns the PC to remember.
+ * own key for that PC and returns the PC to remember. `port` is the one the QR or the scan gave, or
+ * null (an address typed by hand) to try the usual ones.
  */
 export async function pair(
   Socket: WSClass,
   identity: Identity,
-  target: { hosts: string[]; port: number; id?: string },
+  target: { hosts: string[]; port: number | null; id?: string },
   secret: { via: 'qr'; key: Uint8Array } | { via: 'code'; code: string },
 ): Promise<Pc> {
-  const { ws, hi, host } = await reach(Socket, target.hosts, target.port, target.id ?? null)
+  const { ws, hi, host, port } = await reach(Socket, target.hosts, target.port ? [target.port] : PORTS, target.id ?? null)
   const deviceKey = randomBytes(32)
   const pairKey = secret.via === 'qr' ? secret.key : codeKey(secret.code)
   const box = seal(pairKey, { c: hi.c, name: identity.name, key: toB64(deviceKey) })
   const welcome = await greet(ws, { t: 'pair', dev: identity.id, via: secret.via, box: toB64(box) }, deviceKey)
   try { ws.close() } catch {}
-  return { id: welcome.id, name: welcome.name, hosts: [host, ...target.hosts.filter(h => h !== host)], port: target.port, key: toB64(deviceKey), lastHost: host }
+  return { id: welcome.id, name: welcome.name, hosts: [host, ...target.hosts.filter(h => h !== host)], port, key: toB64(deviceKey), lastHost: host }
 }
 
 export interface ConnectionEvents {
@@ -167,7 +173,8 @@ export class Connection {
     this.setStatus('connecting', this.error)
     const hosts = this.pc.lastHost ? [this.pc.lastHost, ...this.pc.hosts] : this.pc.hosts
     try {
-      const { ws, hi, host } = await reach(this.Socket, hosts, this.pc.port, this.pc.id)
+      // on its port and on the usual ones: the PC moves when Windows has taken its port
+      const { ws, hi, host, port } = await reach(this.Socket, hosts, portsFor(this.pc.port), this.pc.id)
       if (!this.wanted) { ws.close(); return }
       const box = seal(this.key, { c: hi.c, name: this.identity.name })
       const welcome = await greet(ws, { t: 'hello', dev: this.identity.id, box: toB64(box) }, this.key)
@@ -177,8 +184,8 @@ export class Connection {
       this.lastHeard = Date.now()
       ws.onmessage = (e: MessageEvent) => this.receive(e.data)
       ws.onclose = ws.onerror = () => this.lost(ws)
-      if (host !== this.pc.lastHost || welcome.name !== this.pc.name) {
-        this.pc = { ...this.pc, lastHost: host, name: welcome.name, hosts: [host, ...this.pc.hosts.filter(h => h !== host)] }
+      if (host !== this.pc.lastHost || port !== this.pc.port || welcome.name !== this.pc.name) {
+        this.pc = { ...this.pc, lastHost: host, port, name: welcome.name, hosts: [host, ...this.pc.hosts.filter(h => h !== host)] }
         this.on.pcChanged?.(this.pc)
       }
       this.setStatus('connected')

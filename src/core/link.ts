@@ -11,6 +11,17 @@ export interface PairLink {
 
 export const PROTOCOL = 1
 export const DEFAULT_PORT = 47810
+/**
+ * Where the PC app listens: the usual port or, when Windows has it reserved (Hyper-V, WSL and Docker
+ * reserve blocks of thousands of ports at startup), one of these two. The same list as PORTS in the PC
+ * app's state.rs. Any other port only arrives in the QR.
+ */
+export const PORTS = [DEFAULT_PORT, 27810, 37810]
+
+/** The port known for a PC first, then the usual ones (the PC may have had to move). */
+export function portsFor(port: number): number[] {
+  return [...new Set([port, ...PORTS])]
+}
 
 export function parsePairLink(text: string): PairLink | null {
   const m = /^puntero:\/\/pair\?(.*)$/i.exec(text.trim())

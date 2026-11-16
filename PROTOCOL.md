@@ -3,9 +3,14 @@
 Entre la app de Android (este repo) y la app de escritorio (`tools/puntero/app` de
 [pc-toolkit](https://github.com/ikerlorente11/pc-toolkit)). Todo por la red local, puerto TCP **47810**.
 
+Si Windows tiene ese puerto reservado (Hyper-V, WSL y Docker reservan bloques de miles de puertos al arrancar), el
+PC pasa al **27810**, luego al **37810** y si no al que le dé Windows, y se queda con él para la próxima vez. El QR
+lleva siempre el puerto; el móvil busca PCs en los tres y, si un PC emparejado no contesta en el suyo, lo prueba en
+los otros dos (y guarda el nuevo).
+
 ## Descubrir
 
-`GET http://<ip>:47810/info` →
+`GET http://<ip>:<puerto>/info` →
 `{"app":"puntero","v":1,"id":"<id del PC>","name":"<nombre>","version":"0.1.0","pairing":true}`
 
 El móvil pregunta a todas las direcciones de su /24 a la vez (sin UDP, funciona en Expo Go). `pairing` dice si la
@@ -21,7 +26,7 @@ recomendado).
 
 ## Sesión
 
-WebSocket `ws://<ip>:47810/ws`.
+WebSocket `ws://<ip>:<puerto>/ws`.
 
 1. PC → texto: `{"t":"hi","app":"puntero","v":1,"c":"<reto base64, 16 bytes>","name":…,"id":…}`
 2. Móvil → texto, una de:

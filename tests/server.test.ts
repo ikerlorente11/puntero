@@ -6,8 +6,8 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { Connection, pair, Pc, ServerEvent } from '../src/core/client'
-import { parsePairLink } from '../src/core/link'
-import { probe } from '../src/core/scan'
+import { parsePairLink, PORTS } from '../src/core/link'
+import { findPc, probe } from '../src/core/scan'
 import { randomBytes, seal, toB64 } from '../src/core/box'
 
 const linkFile = process.env.PUNTERO_DEV_LINK
@@ -57,6 +57,16 @@ describe.skipIf(!linkFile)('against the PC app', () => {
     await waitFor(() => (forged.status === 'failed' ? true : undefined))
     forged.close()
     void seal
+  })
+
+  it('finds the PC on its port when the phone remembers another one', async () => {
+    const stale = { ...pc, port: PORTS.find(p => p !== pc.port)! }
+    expect(await findPc(fetch as any, stale)).toEqual({ host: '127.0.0.1', port: pc.port })
+    let moved: Pc | null = null
+    const c = new Connection(WebSocket as any, identity, stale, { status: () => {}, event: () => {}, pcChanged: changed => { moved = changed } })
+    await waitFor(() => (c.status === 'connected' ? true : undefined))
+    expect(moved!.port).toBe(pc.port)
+    c.close()
   })
 
   it('controls the PC as a paired phone', async () => {
